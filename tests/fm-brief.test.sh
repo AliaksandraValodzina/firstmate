@@ -1621,6 +1621,50 @@ test_worker_role_scope
 # Rule 2 governs file edits rather than pool administration, so every crewmate
 # scaffold must prohibit the administrative act itself. The rule is emitted from
 # one shared string so the ship and scout copies cannot drift apart.
+# Regression: AGENTS.md section 1 forbids an agent name as a commit co-author,
+# but crewmates read only their brief, and some harnesses append a
+# `Co-Authored-By` trailer by default. Every generated variant must countermand
+# it, so this asserts the emitted brief rather than the script's source: moving
+# the line somewhere the scaffold never renders must fail here.
+test_every_scaffold_forbids_an_agent_commit_co_author() {
+  local home id brief mode
+  home="$TMP_ROOT/coauthor-home"
+  mkdir -p "$home/data"
+
+  for mode in no-mistakes direct-PR local-only; do
+    id="brief-coauthor-$mode"
+    FM_HOME="$home" "$ROOT/bin/fm-brief.sh" "$id" alpha --mode "$mode" >/dev/null 2>&1 \
+      || fail "fm-brief.sh --mode $mode exited non-zero"
+    brief="$home/data/$id/brief.md"
+    assert_grep "as a commit co-author" "$brief" \
+      "$mode ship brief did not forbid an agent commit co-author"
+    # shellcheck disable=SC2016 # Literal trailer name must remain unexpanded.
+    assert_grep 'Co-Authored-By' "$brief" \
+      "$mode ship brief did not name the trailer its harness may append by default"
+  done
+
+  FM_HOME="$home" "$ROOT/bin/fm-brief.sh" brief-coauthor-scout alpha --scout >/dev/null 2>&1 \
+    || fail "fm-brief.sh --scout exited non-zero"
+  brief="$home/data/brief-coauthor-scout/brief.md"
+  assert_grep "as a commit co-author" "$brief" \
+    "scout brief did not forbid an agent commit co-author"
+  # shellcheck disable=SC2016 # Literal trailer name must remain unexpanded.
+  assert_grep 'Co-Authored-By' "$brief" \
+    "scout brief did not name the trailer its harness may append by default"
+
+  FM_HOME="$home" FM_SECONDMATE_CHARTER='alpha domain' FM_SECONDMATE_SCOPE='alpha work' \
+    "$ROOT/bin/fm-brief.sh" brief-coauthor-sm --secondmate alpha >/dev/null 2>&1 \
+    || fail "fm-brief.sh --secondmate exited non-zero"
+  brief="$home/data/brief-coauthor-sm/brief.md"
+  assert_grep "as a commit co-author" "$brief" \
+    "secondmate charter did not forbid an agent commit co-author"
+  # shellcheck disable=SC2016 # Literal trailer name must remain unexpanded.
+  assert_grep 'Co-Authored-By' "$brief" \
+    "secondmate charter did not name the trailer its harness may append by default"
+
+  pass "fm-brief.sh: every generated variant forbids an agent commit co-author"
+}
+
 test_crewmate_scaffolds_forbid_pool_administration() {
   local home id brief mode ship_rule scout_rule
   home="$TMP_ROOT/pool-admin-home"
@@ -1731,4 +1775,5 @@ test_ship_branch_prefix_empty_override_yields_bare_task_id
 test_branch_prefix_is_refused_where_it_does_not_apply
 test_branch_prefix_value_is_validated
 test_branch_prefix_command_is_shell_safe
+test_every_scaffold_forbids_an_agent_commit_co_author
 test_crewmate_scaffolds_forbid_pool_administration

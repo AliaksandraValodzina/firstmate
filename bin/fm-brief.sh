@@ -505,6 +505,12 @@ if [ -e "$CONFIG/wait-no-turns" ]; then
   WAIT_BLOCK="$WAIT_SECTION"$'\n\n'
 fi
 
+# One shared sentence countermands the commit co-author trailer that some agent
+# harnesses append by default. Defined before the secondmate branch so every
+# generated variant - ship, scout, and secondmate charter - can render it.
+# shellcheck disable=SC2016  # Backticks here are literal Markdown for the reading agent, not a command substitution.
+COMMIT_COAUTHOR_RULE='Never add an agent, model, or tool name as a commit co-author; if your harness appends a `Co-Authored-By` trailer by default, remove it before you commit.'
+
 if [ "$KIND" = secondmate ]; then
 SECONDMATE_PROJECTS=""
 idx=1
@@ -543,6 +549,7 @@ You are in an isolated firstmate home. The local \`AGENTS.md\` is your job descr
 $PROJECT_CLONES_NOTE
 Delegate project work to your own crewmates with the normal firstmate lifecycle: brief, spawn, status, watcher, steer, teardown, and recovery.
 Do not invent a second delegation system.
+$COMMIT_COAUTHOR_RULE
 You do not generate your own work.
 Act only on tasks the main firstmate routes to you.
 Never start a survey, audit, or "find improvements" sweep on your own initiative; that is not your job and it is unwanted.
@@ -737,6 +744,7 @@ $CREWMATE_PAUSE_INSTRUCTIONS
    Firstmate's reply normally writes that closing line at answer time; when a blocker or wait clears WITHOUT a firstmate reply, append \`resolved [at=<epoch>]: {how it cleared}\` yourself (same \`[key=<slug>]\` if you opened it with one) as you resume.
 $SHARED_INFRA_RULE
 $SHARED_NO_CD_RULE
+9. $COMMIT_COAUTHOR_RULE
 
 $WAIT_BLOCK$INBOX_SECTION
 
@@ -822,6 +830,7 @@ $ASK_USER_BLOCK
    Firstmate's reply normally writes that closing line at answer time; when a blocker or wait clears WITHOUT a firstmate reply, append \`resolved [at=<epoch>]: {how it cleared}\` yourself (same \`[key=<slug>]\` if you opened it with one) as you resume.
 $SHARED_INFRA_RULE
 $SHARED_NO_CD_RULE
+9. $COMMIT_COAUTHOR_RULE
 
 $WAIT_BLOCK$INBOX_SECTION
 
